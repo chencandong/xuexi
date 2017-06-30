@@ -1,6 +1,3 @@
-
-
-
 #coding:utf-8
 
 import requests
@@ -33,15 +30,15 @@ class KvData(object):
             result = {"errcode": -1, "desc": "wrong command"}
         return result
 
-    def init_passwd(self,command):
+    def init_passwd(self, command):
         with open('auth.conf') as f:
             for line in f:
                 line = line.strip('\n')
                 if line:
                     line = line.split()
-                    print "auth",line[0],command[1],line[1],command[2]
-                    if line[0] == command[1] and line[1]==command[2]:
-                        AUTH_STATUS[self.addr_id]=True
+                    print "auth", line[0], command[1], line[1], command[2]
+                    if line[0] == command[1] and line[1] == command[2]:
+                        AUTH_STATUS[self.addr_id] = True
                         print "login successful"
                         print AUTH_STATUS
                         return {"errcode": 0, "desc": "login succssful"}
@@ -52,7 +49,7 @@ class KvData(object):
     def set_kv(self, key, value):
         if self.addr_id in AUTH_STATUS and AUTH_STATUS[self.addr_id]:
             DICT[key] = value
-            return {"errcode":0,"desc":"sccusful"}
+            return {"errcode": 0, "desc": "sccusful"}
         else:
             return {"errcode": -1, "desc": "you don't have the permission"}
 
@@ -75,10 +72,10 @@ class KvData(object):
                 else:
                     content_length = ""
 
-                self.set_kv(name, {"http_code":http_code, "content_length":content_length})
-                result={"errcode": 0, "http_code":http_code, "content_length": content_length}
+                self.set_kv(name, {"http_code":http_code, "content_length": content_length})
+                result = {"errcode": 0, "http_code":http_code, "content_length": content_length}
             except Exception as e:
-                result={"errcode": -1, "desc": "not valid url"}
+                result = {"errcode": -1, "desc": "not valid url"}
             finally:
                 return result
         else:
@@ -162,21 +159,21 @@ class KvServer(object):
                 except socket.error as e:
                     del self.message_queues[output]
                     self.outputs.remove(output)
-                    print  "disconnection from %s"%self.client_info[output]
+                    print "disconnection from %s"%self.client_info[output]
                     if addr_id in AUTH_STATUS:
                         del AUTH_STATUS[output]
 
-
-host = "127.0.0.1"
-port = "5678"
-opts, args=getopt.getopt(sys.argv[1:], 'h:p:',["host=","port="])
-for k, v in opts:
-    if k in ('-h','--host'):
-        host = v
-    if k in ('-p','--port'):
-        port = v
-ks = KvServer(host=host, port=int(port))
-ks.run()
+if __name__ =="__main__":
+    host = "127.0.0.1"
+    port = "5678"
+    opts, args=getopt.getopt(sys.argv[1:], 'h:p:',["host=","port="])
+    for k, v in opts:
+        if k in ('-h','--host'):
+            host = v
+        if k in ('-p','--port'):
+            port = v
+    ks = KvServer(host=host, port=int(port))
+    ks.run()
 
 
 
