@@ -9,7 +9,7 @@
 **定义针对用户的crontab任务**
 针对特定用户的配置文件，针对用户的crontab集合通常放在/var/spool/cron中，同样建议使用crontab命令创建
 
-分别可以使用/etc/cront.allow和/etc/cront.deny可以允许和拒绝用户访问cron任务，当/etc/cront.allow这个文件存在的时候，/etc/cront.deny不生效，当/etc/cront.allow不存在，/etc/cront.deny存在的时候，/etc/cront.deny生效，当两个文件都不存在的时候，只有root用户可以使用crontab命令
+分别使用/etc/cront.allow和/etc/cront.deny可以允许和拒绝用户访问cron任务，当/etc/cront.allow这个文件存在的时候，/etc/cront.deny不生效，当/etc/cront.allow不存在，/etc/cront.deny存在的时候，/etc/cront.deny生效，当两个文件都不存在的时候，只有root用户可以使用crontab命令
 
 
 ## cron的时间描述中-代表什么意思，/代表什么意思
@@ -41,4 +41,4 @@ crontab的作业命令由单行的固定格式的文本构成，一般分为三�
 * * * * * * date "+%H:%M:%S" >>/tmp/time.txt
 * * * * * * sleep 30； date "+%H:%M:%S" >>/tmp/time.txt
 
-业可以在脚本中使用循环+sleep来达到秒级的任务作业
+也可以在脚本中使用循环+sleep来达到秒级的任务作业
