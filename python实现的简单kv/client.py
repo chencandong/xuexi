@@ -1,4 +1,5 @@
-#coding:utf-8
+# -*- coding:utf-8 -*-
+"""定义编码类型"""
 import socket
 import getopt
 import sys
@@ -13,7 +14,7 @@ if __name__ == "__main__":
                 HOST = v
                 print HOST
             if k in ('-p', '--port'):
-                PORT =int(v)
+                PORT = int(v)
     except getopt.GetoptError as e:
         print "Error:%s" % e
 
@@ -27,4 +28,4 @@ if __name__ == "__main__":
             print data
         except socket.error as e:
             print e
-    s.close() #关闭连接
+    s.close()

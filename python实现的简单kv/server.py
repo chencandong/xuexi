@@ -1,36 +1,41 @@
-#coding:utf-8
+# -*- coding:utf-8 -*-
+"""定义编码类型"""
 
-import requests
 import Queue
 import sys
 import socket
 import select
 import getopt
+import requests
 
 DICT = {}
 AUTH_STATUS = {}
 
 
 class KvData(object):
-    def __init__(self,addr_id):
+    """定义操作全局字典类"""
+    def __init__(self, addr_id):
+        """初始化全局字典类"""
         self.addr_id = addr_id
 
     def execute(self, command):
+        """执行命令操作字典"""
         cmd = command.split()
         print cmd
-        if len(cmd) == 3 and cmd[0] == "AUTH" :
-            result=self.init_passwd(cmd)
+        if len(cmd) == 3 and cmd[0] == "AUTH":
+            result = self.init_passwd(cmd)
         elif len(cmd) == 3 and cmd[0] == "SET":
-            result=self.set_kv(cmd[1],cmd[2])
+            result = self.set_kv(cmd[1], cmd[2])
         elif len(cmd) == 2 and  cmd[0] == "GET":
-            result=self.get_kv(cmd[1])
+            result = self.get_kv(cmd[1])
         elif len(cmd) == 3 and cmd[0] == "URL":
-            result = self.get_httpstat(cmd[1],cmd[2])
+            result = self.get_httpstat(cmd[1], cmd[2])
         else:
             result = {"errcode": -1, "desc": "wrong command"}
         return result
 
     def init_passwd(self, command):
+        """初始化密码"""
         with open('auth.conf') as f:
             for line in f:
                 line = line.strip('\n')
@@ -47,22 +52,27 @@ class KvData(object):
         return {"errcode": -1, "desc": "no such user or wrong passwd"}
 
     def set_kv(self, key, value):
+        """配置key-value"""
         if self.addr_id in AUTH_STATUS and AUTH_STATUS[self.addr_id]:
             DICT[key] = value
-            return {"errcode": 0, "desc": "sccusful"}
+            result = {"errcode": 0, "desc": "sccusful"}
         else:
-            return {"errcode": -1, "desc": "you don't have the permission"}
+            result = {"errcode": -1, "desc": "you don't have the permission"}
+        return result
 
-    def get_kv(self,key):
+    def get_kv(self, key):
+        """获取key-value"""
         if self.addr_id in AUTH_STATUS and AUTH_STATUS[self.addr_id]:
             if key in DICT:
-                return {"errcode:": 0, "value": DICT[key]}
+                result = {"errcode:": 0, "value": DICT[key]}
             else:
-                return {"errcode": -1, "desc": "no such key "}
+                result = {"errcode": -1, "desc": "no such key "}
         else:
-            return {"errcode": -1, "desc": "you don't have the permission"}
+            result = {"errcode": -1, "desc": "you don't have the permission"}
+        return  result
 
     def get_httpstat(self, name, url):
+        """获取url的http状态"""
         if self.addr_id in AUTH_STATUS and AUTH_STATUS[self.addr_id]:
             try:
                 r = requests.get(url)
@@ -75,23 +85,21 @@ class KvData(object):
                 self.set_kv(name, {"http_code":http_code, "content_length": content_length})
                 result = {"errcode": 0, "http_code":http_code, "content_length": content_length}
             except Exception as e:
-                result = {"errcode": -1, "desc": "not valid url"}
-            finally:
-                return result
+                result = {"errcode": -1, "desc": e}
         else:
-            return {"errcode": -1, "desc": "you don't have the permission"}
-
-
+            result = {"errcode": -1, "desc": "you don't have the permission"}
+        return result
 
 class KvServer(object):
-    def __init__(self, host='127.0.0.1', port=5678, time_out=20):
+    """初始化kv服务器"""
+    def __init__(self, host_name, port_num, buff_size=1024, time_out=20):
         try:
-            self.__host = host
-            self.__port = port
+            self.__host = host_name
+            self.__port = port_num
             self.__time_out = time_out
-            self.__buffsize = 1024
+            self.__buffsize = buff_size
 
-            # self.conn,self.addr=self.s.accept()
+            # self.conn,self.addr = self.s.accept()
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.s.setblocking(False)
             self.s.settimeout(self.__time_out)
@@ -103,7 +111,7 @@ class KvServer(object):
             print "port %s  listening ........"%self.__port
 
         except socket.error as e:
-            print "errcode:%s;desc:%s"%(e[0],e[1])
+            print "errcode:%s;desc:%s" % (e[0], e[1])
             raise
 
         self.inputs = [self.s]
@@ -112,6 +120,7 @@ class KvServer(object):
         self.client_info = {}
 
     def run(self):
+        """运行kv服务器"""
         running = True
         while running:
             rs, ws, es = select.select(self.inputs, self.outputs, self.inputs, 20)
@@ -121,7 +130,7 @@ class KvServer(object):
             for s in rs:
                 if s == self.s:
                     conn, addr = s.accept()
-                    print 'connect from %s'%(addr[0]+":"+str(addr[1]))
+                    print 'connect from %s' % (addr[0]+":"+str(addr[1]))
                     conn.setblocking(0)
                     self.inputs.append(conn)
                     self.client_info[conn] = (addr[0]+":"+str(addr[1]))
@@ -157,28 +166,21 @@ class KvServer(object):
                         self.outputs.remove(output)
 
                 except socket.error as e:
+                    print e
                     del self.message_queues[output]
                     self.outputs.remove(output)
                     print "disconnection from %s"%self.client_info[output]
                     if addr_id in AUTH_STATUS:
                         del AUTH_STATUS[output]
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     host = "127.0.0.1"
     port = "5678"
-    opts, args=getopt.getopt(sys.argv[1:], 'h:p:',["host=","port="])
+    opts, args = getopt.getopt(sys.argv[1:], 'h:p:', ["host=", "port="])
     for k, v in opts:
-        if k in ('-h','--host'):
+        if k in ('-h', '--host'):
             host = v
-        if k in ('-p','--port'):
+        if k in ('-p', '--port'):
             port = v
-    ks = KvServer(host=host, port=int(port))
+    ks = KvServer(host, int(port))
     ks.run()
-
-
-
-
-
-
-
-
